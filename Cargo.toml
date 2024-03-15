@@ -2,6 +2,7 @@
 name = "rustyaci"
 version = "0.1.0"
 edition = "2021"
+rust = "1.67.0"
 
 license = "MIT"
 keywords = ["cisco", "aci", "api"]
@@ -17,7 +18,10 @@ repository = "https://github.com/richardstrnad/rustyaci"
 anyhow = "1.0.81"
 dotenvy = "0.15.7"
 futures = "0.3.29"
-reqwest = { version = "0.11.22", features = ["cookies", "json"] }
+reqwest = { version = "0.11.25", features = ["cookies", "json"] }
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 tokio = { version = "1.34.0", features = ["full"] }
+
+# for -Zminimal-versions
+openssl = "0.10.38" # Ubuntu build issue
