@@ -786,7 +786,7 @@ dependencies = [
  "anyhow",
  "dotenvy",
  "futures",
- "openssl-sys",
+ "openssl",
  "reqwest",
  "serde",
  "serde_json",
