@@ -26,4 +26,4 @@ http = "0.2"
 trait-variant = "0.1.1"
 
 # for -Zminimal-versions
-openssl = "0.10.38" # Ubuntu build issue
+openssl = "0.10.55" # Ubuntu build issue
