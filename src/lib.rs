@@ -71,7 +71,7 @@ impl<E: Executor> ACI<E> {
 
         match token {
             Some(token) => {
-                self.token = String::from_str(&token).unwrap();
+                self.token = String::from_str(token).unwrap();
             }
             _ => return false,
         }
