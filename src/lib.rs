@@ -71,7 +71,7 @@ impl<E: Executor> ACI<E> {
             .unwrap()[0]["aaaLogin"]["attributes"]["token"]
             .to_string();
 
-        if self.token == String::from("null") {
+        if self.token == *"null" {
             return false;
         }
 
