@@ -120,7 +120,6 @@ mod tests {
             &self,
             request: reqwest::Request,
         ) -> anyhow::Result<reqwest::Response> {
-            println!("{}", request.url().path());
             match request.url().path() {
                 "/api/aaaLogin.json" => login_request(),
                 "/api/class/fvTenant.json" => bd_request(),
@@ -167,6 +166,16 @@ mod tests {
 
         assert_eq!("TOKEN", aci.token);
         assert_eq!("TOKEN", aci.get_token());
+    }
+
+    #[tokio::test]
+    #[should_panic]
+    async fn get_invalid_json() {
+        let aci = login().await;
+
+        aci.get_json(String::from("this_is_nonsense"))
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
