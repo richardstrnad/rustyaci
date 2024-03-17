@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anyhow::{anyhow, Result};
 use reqwest::Client;
 use serde_json::Value;
@@ -62,17 +64,16 @@ impl<E: Executor> ACI<E> {
         });
         let request = request.json(json).build().unwrap();
         let response = self.executor.execute_request(request).await;
-        self.token = response
-            .unwrap()
-            .json::<Value>()
-            .await
-            .unwrap()
-            .get("imdata")
-            .unwrap()[0]["aaaLogin"]["attributes"]["token"]
-            .to_string();
 
-        if self.token == *"null" {
-            return false;
+        // Parse the token out of the response
+        let token = response.unwrap().json::<Value>().await.unwrap();
+        let token = token.get("imdata").unwrap()[0]["aaaLogin"]["attributes"]["token"].as_str();
+
+        match token {
+            Some(token) => {
+                self.token = String::from_str(&token).unwrap();
+            }
+            _ => return false,
         }
 
         true
@@ -120,19 +121,20 @@ mod tests {
             request: reqwest::Request,
         ) -> anyhow::Result<reqwest::Response> {
             match request.url().path() {
-                "/api/aaaLogin.json" => login_request(request),
+                "/api/aaaLogin.json" => login_request(),
                 _ => Err(anyhow!("not supported in MockClient!")),
             }
         }
     }
 
-    fn login_request(request: reqwest::Request) -> anyhow::Result<reqwest::Response> {
+    fn login_request() -> anyhow::Result<reqwest::Response> {
         let data = fs::read_to_string("tests/json/aaaLogin.json")?;
         let response = http::response::Builder::new()
             .status(200)
             .body(data)
             .unwrap();
         let response = reqwest::Response::from(response);
+
         Ok(response)
     }
 
@@ -144,6 +146,7 @@ mod tests {
         let password = String::from("PASSWORD");
         let aci = ACI::new_with_executor(executor, server, username, password).await;
 
-        println!("{}", aci.token)
+        assert_eq!("TOKEN", aci.token);
+        assert_eq!("TOKEN", aci.get_token());
     }
 }
