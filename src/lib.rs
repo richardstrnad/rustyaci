@@ -120,8 +120,10 @@ mod tests {
             &self,
             request: reqwest::Request,
         ) -> anyhow::Result<reqwest::Response> {
+            println!("{}", request.url().path());
             match request.url().path() {
                 "/api/aaaLogin.json" => login_request(),
+                "/api/class/fvTenant.json" => bd_request(),
                 _ => Err(anyhow!("not supported in MockClient!")),
             }
         }
@@ -138,15 +140,51 @@ mod tests {
         Ok(response)
     }
 
-    #[tokio::test]
-    async fn aci_login() {
+    fn bd_request() -> anyhow::Result<reqwest::Response> {
+        let data = fs::read_to_string("tests/json/fvTenant.json")?;
+        let response = http::response::Builder::new()
+            .status(200)
+            .body(data)
+            .unwrap();
+        let response = reqwest::Response::from(response);
+
+        Ok(response)
+    }
+
+    async fn login() -> ACI<MockClient> {
         let executor = MockClient;
         let server = String::from("SERVER");
         let username = String::from("USERNAME");
         let password = String::from("PASSWORD");
         let aci = ACI::new_with_executor(executor, server, username, password).await;
 
+        aci
+    }
+
+    #[tokio::test]
+    async fn aci_login() {
+        let aci = login().await;
+
         assert_eq!("TOKEN", aci.token);
         assert_eq!("TOKEN", aci.get_token());
+    }
+
+    #[tokio::test]
+    async fn aci_get_json() {
+        let aci = login().await;
+
+        match aci.get_json(String::from("class/fvTenant.json")).await {
+            Ok(bds) => {
+                let bd_array = bds
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|bd| bd["fvTenant"]["attributes"]["name"].as_str().unwrap())
+                    .collect::<Vec<_>>();
+                assert_eq!(bd_array, vec!["infra", "common"]);
+                assert_ne!(bd_array, vec!["infra", "common", "test"])
+            }
+            Err(e) => panic!("{}", e),
+        }
     }
 }
