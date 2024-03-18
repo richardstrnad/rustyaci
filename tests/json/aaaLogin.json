@@ -1,0 +1,136 @@
+{
+  "totalCount": "1",
+  "imdata": [
+    {
+      "aaaLogin": {
+        "attributes": {
+          "token": "TOKEN",
+          "siteFingerprint": "FINGER_PRINT",
+          "refreshTimeoutSeconds": "600",
+          "maximumLifetimeSeconds": "86400",
+          "guiIdleTimeoutSeconds": "1200",
+          "restTimeoutSeconds": "90",
+          "creationTime": "1710686245",
+          "firstLoginTime": "1710686245",
+          "userName": "admin",
+          "remoteUser": "false",
+          "unixUserId": "15374",
+          "sessionId": "SESSION_ID",
+          "lastName": "",
+          "firstName": "",
+          "changePassword": "no",
+          "version": "5.2(8h)",
+          "buildTime": "Tue Dec 05 10:28:27 UTC 2023",
+          "node": "topology/pod-1/node-1"
+        },
+        "children": [
+          {
+            "aaaUserDomain": {
+              "attributes": {
+                "name": "common",
+                "rolesR": "tenant-connectivity,tenant-protocol,vmm-policy,tenant-ext-connectivity,tenant-ext-protocol,tenant-qos,tenant-security,tenant-network-profile,tenant-epg,fabric-connectivity,fabric-protocol,fabric-equipment,access-connectivity,access-protocol,access-equipment,access-qos,ops,nw-svc-policy",
+                "rolesW": ""
+              },
+              "children": [
+                {
+                  "aaaReadRoles": {
+                    "attributes": {},
+                    "children": [
+                      {
+                        "role": {
+                          "attributes": {
+                            "name": "read-all"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "aaaWriteRoles": {
+                    "attributes": {}
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "aaaUserDomain": {
+              "attributes": {
+                "name": "all",
+                "rolesR": "admin",
+                "rolesW": "admin"
+              },
+              "children": [
+                {
+                  "aaaReadRoles": {
+                    "attributes": {}
+                  }
+                },
+                {
+                  "aaaWriteRoles": {
+                    "attributes": {},
+                    "children": [
+                      {
+                        "role": {
+                          "attributes": {
+                            "name": "admin"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "DnDomainMapEntry": {
+              "attributes": {
+                "dn": "uni/tn-mgmt",
+                "readPrivileges": "admin",
+                "writePrivileges": "admin"
+              }
+            }
+          },
+          {
+            "DnDomainMapEntry": {
+              "attributes": {
+                "dn": "uni/tn-infra",
+                "readPrivileges": "admin",
+                "writePrivileges": "admin"
+              }
+            }
+          },
+          {
+            "DnDomainMapEntry": {
+              "attributes": {
+                "dn": "uni/tn-common",
+                "readPrivileges": "admin,tenant-connectivity,tenant-protocol,vmm-policy,tenant-ext-connectivity,tenant-ext-protocol,tenant-qos,tenant-security,tenant-network-profile,tenant-epg,fabric-connectivity,fabric-protocol,fabric-equipment,access-connectivity,access-protocol,access-equipment,access-qos,ops,nw-svc-policy",
+                "writePrivileges": "admin"
+              }
+            }
+          },
+          {
+            "ReadOnlySubtrees": {
+              "attributes": {
+                "count": "1",
+                "description": "List of subtree DNs derived from RBAC domains assigned to this user (domain 'all' privileges do not require RBAC rules to grant access and are not shown below)"
+              },
+              "children": [
+                {
+                  "RbacRule": {
+                    "attributes": {
+                      "subtreeDn": "uni/tn-common",
+                      "domain": "common"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

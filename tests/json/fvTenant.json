@@ -1,0 +1,47 @@
+{
+  "totalCount": "2",
+  "imdata": [
+    {
+      "fvTenant": {
+        "attributes": {
+          "annotation": "",
+          "childAction": "",
+          "descr": "",
+          "dn": "uni/tn-infra",
+          "extMngdBy": "",
+          "lcOwn": "local",
+          "modTs": "2024-02-14T10:31:42.445+01:00",
+          "monPolDn": "uni/tn-common/monepg-default",
+          "name": "infra",
+          "nameAlias": "",
+          "ownerKey": "",
+          "ownerTag": "",
+          "status": "",
+          "uid": "0",
+          "userdom": "all"
+        }
+      }
+    },
+    {
+      "fvTenant": {
+        "attributes": {
+          "annotation": "",
+          "childAction": "",
+          "descr": "",
+          "dn": "uni/tn-common",
+          "extMngdBy": "",
+          "lcOwn": "local",
+          "modTs": "2024-02-14T10:31:22.505+01:00",
+          "monPolDn": "uni/tn-common/monepg-default",
+          "name": "common",
+          "nameAlias": "",
+          "ownerKey": "",
+          "ownerTag": "",
+          "status": "",
+          "uid": "0",
+          "userdom": "all"
+        }
+      }
+    }
+  ]
+}

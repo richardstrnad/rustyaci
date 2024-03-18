@@ -786,11 +786,13 @@ dependencies = [
  "anyhow",
  "dotenvy",
  "futures",
+ "http",
  "openssl",
  "reqwest",
  "serde",
  "serde_json",
  "tokio",
+ "trait-variant",
 ]
 
 [[package]]
@@ -1087,6 +1089,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "trait-variant"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "45e1a477061e97925d81a2f89fb73b2b8038e6baa5a0023bad380ac23b5f4fa6"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
