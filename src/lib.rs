@@ -91,6 +91,18 @@ impl<E: Executor> ACI<E> {
         Err(anyhow!("Error!"))
     }
 
+    pub async fn post_json(&self, uri: String, data: String) -> Result<()> {
+        let url = format!("https://{}/api/{}", self.server, uri);
+        let data: Value = serde_json::from_str(data.as_str())?;
+
+        let request = self.client.post(url).json(&data).build()?;
+        let response = self.executor.execute_request(request).await?;
+        if response.json::<Value>().await?.get("imdata").is_some() {
+            return Ok(());
+        }
+        Err(anyhow!("Error!"))
+    }
+
     pub fn get_token(&self) -> &String {
         &self.token
     }
@@ -108,9 +120,10 @@ impl ACI<Client> {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
+    use std::{fs, str::FromStr};
 
     use anyhow::anyhow;
+    use serde_json::Value;
 
     use crate::{Executor, ACI};
     pub struct MockClient;
@@ -123,6 +136,7 @@ mod tests {
             match request.url().path() {
                 "/api/aaaLogin.json" => login_request(),
                 "/api/class/fvTenant.json" => bd_request(),
+                "/api/mo.json" => mo_request(request),
                 _ => Err(anyhow!("not supported in MockClient!")),
             }
         }
@@ -144,6 +158,24 @@ mod tests {
         let response = http::response::Builder::new()
             .status(200)
             .body(data)
+            .unwrap();
+        let response = reqwest::Response::from(response);
+
+        Ok(response)
+    }
+
+    fn mo_request(request: reqwest::Request) -> anyhow::Result<reqwest::Response> {
+        let response_data = fs::read_to_string("tests/json/mo.json")?;
+        let data = request.body().unwrap().as_bytes().unwrap();
+        let json_data: Value = serde_json::from_slice(data).unwrap();
+
+        let expected_data = fs::read_to_string("tests/json/post/epg-TEST.json")?;
+        let expected_json_data: Value = serde_json::from_str(&expected_data).unwrap();
+        assert_eq!(json_data, expected_json_data);
+
+        let response = http::response::Builder::new()
+            .status(200)
+            .body(response_data)
             .unwrap();
         let response = reqwest::Response::from(response);
 
@@ -193,6 +225,40 @@ mod tests {
                 assert_eq!(bd_array, vec!["infra", "common"]);
                 assert_ne!(bd_array, vec!["infra", "common", "test"])
             }
+            Err(e) => panic!("{}", e),
+        }
+    }
+
+    #[tokio::test]
+    async fn aci_post_json() {
+        let aci = login().await;
+        let data = fs::read_to_string("tests/json/post/epg-TEST.json").unwrap();
+
+        match aci.post_json(String::from("mo.json"), data).await {
+            Ok(()) => return,
+            Err(e) => panic!("{}", e),
+        }
+    }
+
+    #[tokio::test]
+    async fn aci_post_json_inline_data() {
+        let aci = login().await;
+        let data = r#"
+        {
+  "fvAEPg": {
+    "attributes": {
+      "dn": "uni/tn-TEST/ap-TEST/epg-TEST",
+      "name": "TEST"
+    }
+  }
+}
+        "#;
+
+        match aci
+            .post_json(String::from("mo.json"), String::from_str(data).unwrap())
+            .await
+        {
+            Ok(()) => return,
             Err(e) => panic!("{}", e),
         }
     }
