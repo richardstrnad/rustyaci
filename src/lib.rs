@@ -103,6 +103,39 @@ impl<E: Executor> ACI<E> {
         Err(anyhow!("Error!"))
     }
 
+    // This function creates a snapshot of the ACI fabric
+    pub async fn snapshot(&self, description: Option<String>, dn: Option<String>) -> Result<()> {
+        let description = match description {
+            Some(description) => description,
+            None => String::from("Snapshot"),
+        };
+
+        let dn = match dn {
+            Some(dn) => dn,
+            None => String::from(""),
+        };
+
+        let json = &serde_json::json!({
+            "configExportP": {
+                "attributes": {
+                    "adminSt": "triggered",
+                    "descr": format!("by rustyaci - {description}"),
+                    "dn": "uni/fabric/configexp-rustyaci",
+                    "format": "json",
+                    "includeSecureFields": "yes",
+                    "maxSnapshotCount": "global-limit",
+                    "name": "rustyaci",
+                    "nameAlias": "",
+                    "snapshot": "yes",
+                    "targetDn": format!("{dn}")
+                }
+            }
+        });
+
+        self.post_json(String::from("mo.json"), json.to_string())
+            .await
+    }
+
     pub fn get_token(&self) -> &String {
         &self.token
     }
