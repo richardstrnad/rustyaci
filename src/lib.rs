@@ -105,32 +105,7 @@ impl<E: Executor> ACI<E> {
 
     // This function creates a snapshot of the ACI fabric
     pub async fn snapshot(&self, description: Option<String>, dn: Option<String>) -> Result<()> {
-        let description = match description {
-            Some(description) => description,
-            None => String::from("Snapshot"),
-        };
-
-        let dn = match dn {
-            Some(dn) => dn,
-            None => String::from(""),
-        };
-
-        let json = &serde_json::json!({
-            "configExportP": {
-                "attributes": {
-                    "adminSt": "triggered",
-                    "descr": format!("by rustyaci - {description}"),
-                    "dn": "uni/fabric/configexp-rustyaci",
-                    "format": "json",
-                    "includeSecureFields": "yes",
-                    "maxSnapshotCount": "global-limit",
-                    "name": "rustyaci",
-                    "nameAlias": "",
-                    "snapshot": "yes",
-                    "targetDn": format!("{dn}")
-                }
-            }
-        });
+        let json = get_snapshot_data(description, dn);
 
         self.post_json(String::from("mo.json"), json.to_string())
             .await
@@ -151,14 +126,44 @@ impl ACI<Client> {
     }
 }
 
+fn get_snapshot_data(description: Option<String>, dn: Option<String>) -> Value {
+    let description = match description {
+        Some(description) => description,
+        None => String::from("Snapshot"),
+    };
+
+    let dn = match dn {
+        Some(dn) => dn,
+        None => String::from(""),
+    };
+
+    serde_json::json!({
+        "configExportP": {
+            "attributes": {
+                "adminSt": "triggered",
+                "descr": format!("by rustyaci - {description}"),
+                "dn": "uni/fabric/configexp-rustyaci",
+                "format": "json",
+                "includeSecureFields": "yes",
+                "maxSnapshotCount": "global-limit",
+                "name": "rustyaci",
+                "nameAlias": "",
+                "snapshot": "yes",
+                "targetDn": format!("{dn}")
+            }
+        }
+    })
+}
+
 #[cfg(test)]
 mod tests {
+    use core::panic;
     use std::{fs, str::FromStr};
 
     use anyhow::anyhow;
     use serde_json::Value;
 
-    use crate::{Executor, ACI};
+    use crate::{get_snapshot_data, Executor, ACI};
     pub struct MockClient;
 
     impl Executor for MockClient {
@@ -201,18 +206,48 @@ mod tests {
         let response_data = fs::read_to_string("tests/json/mo.json")?;
         let data = request.body().unwrap().as_bytes().unwrap();
         let json_data: Value = serde_json::from_slice(data).unwrap();
+        println!("{:?}", json_data);
+        if !json_data.is_object() {
+            return Err(anyhow::anyhow!("JSON is not an Object!"));
+        }
 
-        let expected_data = fs::read_to_string("tests/json/post/epg-TEST.json")?;
-        let expected_json_data: Value = serde_json::from_str(&expected_data).unwrap();
-        assert_eq!(json_data, expected_json_data);
+        let request_data = json_data.as_object().unwrap();
+        if request_data.keys().len() > 1 {
+            return Err(anyhow::anyhow!("More than one main key!"));
+        }
 
-        let response = http::response::Builder::new()
-            .status(200)
-            .body(response_data)
-            .unwrap();
-        let response = reqwest::Response::from(response);
+        let class = request_data.keys().nth(0).unwrap().as_str();
+        match class {
+            "fvAEPg" => {
+                let expected_data = fs::read_to_string("tests/json/post/epg-TEST.json")?;
+                let expected_json_data: Value = serde_json::from_str(&expected_data).unwrap();
+                assert_eq!(json_data, expected_json_data);
 
-        Ok(response)
+                let response = http::response::Builder::new()
+                    .status(200)
+                    .body(response_data)
+                    .unwrap();
+                let response = reqwest::Response::from(response);
+
+                return Ok(response);
+            }
+            "configExportP" => {
+                let expected_data = fs::read_to_string("tests/json/post/configExportP.json")?;
+                let expected_json_data: Value = serde_json::from_str(&expected_data).unwrap();
+                assert_eq!(json_data, expected_json_data);
+
+                let response = http::response::Builder::new()
+                    .status(200)
+                    .body(response_data)
+                    .unwrap();
+                let response = reqwest::Response::from(response);
+
+                return Ok(response);
+            }
+            _ => {
+                return Err(anyhow::anyhow!("Class not supported by mock client"));
+            }
+        }
     }
 
     async fn login() -> ACI<MockClient> {
@@ -294,5 +329,47 @@ mod tests {
             Ok(()) => return,
             Err(e) => panic!("{}", e),
         }
+    }
+
+    #[tokio::test]
+    async fn test_aci_snapshot() {
+        let aci = login().await;
+        match aci.snapshot(None, None).await {
+            Ok(()) => return,
+            Err(e) => panic!("{}", e),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_snapshot_data_empty() {
+        let data = get_snapshot_data(None, None);
+        let expected_data = fs::read_to_string("tests/json/post/configExportP.json").unwrap();
+        let expected_json_data: Value = serde_json::from_str(&expected_data).unwrap();
+
+        assert_eq!(data, expected_json_data);
+    }
+
+    #[tokio::test]
+    async fn test_snapshot_data_with_description() {
+        let description = "custom description".to_string();
+        let data = get_snapshot_data(Some(description.clone()), None);
+        let expected_data = fs::read_to_string("tests/json/post/configExportP.json").unwrap();
+        let mut expected_json_data: Value = serde_json::from_str(&expected_data).unwrap();
+        let expected_description = String::from("by rustyaci - ") + description.as_str();
+        expected_json_data["configExportP"]["attributes"]["descr"] =
+            serde_json::Value::String(expected_description);
+
+        assert_eq!(data, expected_json_data);
+    }
+    #[tokio::test]
+    async fn test_snapshot_data_with_dn() {
+        let dn = "fvTenant".to_string();
+        let data = get_snapshot_data(None, Some(dn.clone()));
+        let expected_data = fs::read_to_string("tests/json/post/configExportP.json").unwrap();
+        let mut expected_json_data: Value = serde_json::from_str(&expected_data).unwrap();
+        expected_json_data["configExportP"]["attributes"]["targetDn"] =
+            serde_json::Value::String(dn);
+
+        assert_eq!(data, expected_json_data);
     }
 }
