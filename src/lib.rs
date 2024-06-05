@@ -132,10 +132,7 @@ fn get_snapshot_data(description: Option<String>, dn: Option<String>) -> Value {
         None => String::from("Snapshot"),
     };
 
-    let dn = match dn {
-        Some(dn) => dn,
-        None => String::from(""),
-    };
+    let dn = dn.unwrap_or_default();
 
     serde_json::json!({
         "configExportP": {
