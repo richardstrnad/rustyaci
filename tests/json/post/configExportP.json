@@ -1,0 +1,16 @@
+{
+  "configExportP": {
+    "attributes": {
+      "adminSt": "triggered",
+      "descr": "by rustyaci - Snapshot",
+      "dn": "uni/fabric/configexp-rustyaci",
+      "format": "json",
+      "includeSecureFields": "yes",
+      "maxSnapshotCount": "global-limit",
+      "name": "rustyaci",
+      "nameAlias": "",
+      "snapshot": "yes",
+      "targetDn": ""
+    }
+  }
+}

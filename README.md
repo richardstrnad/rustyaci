@@ -10,7 +10,7 @@ Like [aciClient](https://github.com/richardstrnad/aciClient) but in Rust!
 ## Usage
 Provide a `.env` file that defines the required ENV vars (APIC_HOST, APIC_USERNAME, APIC_PASSWORD).
 Or modify the script to provide this information in another way.
-```
+```rust
 use dotenvy::dotenv;
 use rustyaci::ACI;
 
