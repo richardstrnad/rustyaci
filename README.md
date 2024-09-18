@@ -22,7 +22,13 @@ async fn main() {
     let username = std::env::var("APIC_USERNAME").unwrap();
     let password = std::env::var("APIC_PASSWORD").unwrap();
 
-    let aci = ACI::new(server, username, password).await;
+    let aci = match ACI::new(server, username, password).await {
+        Ok(aci) => aci,
+        Err(e) => {
+            println!("Error: {}", e);
+            return;
+        }
+    };
 
     if let Ok(epgs) = aci.get_json(String::from("class/fvAEPg.json")).await {
         for epg in epgs.as_array().unwrap() {
