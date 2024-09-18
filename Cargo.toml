@@ -2,7 +2,7 @@
 name = "rustyaci"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.75.0"
+rust-version = "1.80.0"
 
 license = "MIT"
 keywords = ["cisco", "aci", "api"]
@@ -28,3 +28,4 @@ time = "0.3.36"
 
 # for -Zminimal-versions
 openssl = "0.10.55" # Ubuntu build issue
+thiserror = "1.0.63"

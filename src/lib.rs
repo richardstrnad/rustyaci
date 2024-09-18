@@ -3,6 +3,17 @@ use std::str::FromStr;
 use anyhow::{anyhow, Result};
 use reqwest::Client;
 use serde_json::Value;
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum AciError {
+    #[error("Login error")]
+    LoginError,
+    #[error("Get error")]
+    GetError,
+    #[error("Post error")]
+    PostError,
+}
 
 pub struct ACI<E: Executor> {
     client: Client,
@@ -33,7 +44,7 @@ impl<E: Executor> ACI<E> {
         server: String,
         username: String,
         password: String,
-    ) -> Self {
+    ) -> std::result::Result<Self, AciError> {
         let client = Client::builder()
             .cookie_store(true)
             .danger_accept_invalid_certs(true);
@@ -46,12 +57,15 @@ impl<E: Executor> ACI<E> {
             password,
             token: String::new(),
         };
-        aci.login().await;
+        let result = aci.login().await;
 
-        aci
+        match result {
+            Ok(()) => Ok(aci),
+            Err(e) => Err(e),
+        }
     }
 
-    async fn login(&mut self) -> bool {
+    async fn login(&mut self) -> std::result::Result<(), AciError> {
         let url = format!("https://{}/api/aaaLogin.json", self.server);
         let request = self.client.post(url);
         let json = &serde_json::json!({
@@ -73,10 +87,10 @@ impl<E: Executor> ACI<E> {
             Some(token) => {
                 self.token = String::from_str(token).unwrap();
             }
-            _ => return false,
+            _ => return Err(AciError::LoginError),
         }
 
-        true
+        Ok(())
     }
 
     // async fn refresh_token(&self)
@@ -117,7 +131,11 @@ impl<E: Executor> ACI<E> {
 }
 
 impl ACI<Client> {
-    pub async fn new(server: String, username: String, password: String) -> Self {
+    pub async fn new(
+        server: String,
+        username: String,
+        password: String,
+    ) -> std::result::Result<Self, AciError> {
         let executor = Client::builder()
             .cookie_store(true)
             .danger_accept_invalid_certs(true);
@@ -254,7 +272,10 @@ mod tests {
         let password = String::from("PASSWORD");
         let aci = ACI::new_with_executor(executor, server, username, password).await;
 
-        aci
+        match aci {
+            Ok(aci) => aci,
+            Err(e) => panic!("{}", e),
+        }
     }
 
     #[tokio::test]
