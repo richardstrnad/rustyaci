@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
 use reqwest::Client;
+use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::Value;
 use thiserror::Error;
 
@@ -13,6 +14,11 @@ pub enum AciError {
     GetError,
     #[error("Post error")]
     PostError,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AciResponse<T> {
+    imdata: Vec<T>,
 }
 
 pub struct ACI<E: Executor> {
@@ -95,14 +101,25 @@ impl<E: Executor> ACI<E> {
 
     // async fn refresh_token(&self)
 
-    pub async fn get_json(&self, uri: String) -> Result<Value> {
+    async fn get_json_data<T>(&self, uri: String) -> Result<Vec<T>>
+    where
+        T: DeserializeOwned,
+    {
         let url = format!("https://{}/api/{}", self.server, uri);
         let request = self.client.get(url).build()?;
         let response = self.executor.execute_request(request).await?;
-        if let Some(data) = response.json::<Value>().await?.get("imdata") {
-            return Ok(data.clone());
-        }
-        Err(anyhow!("Error!"))
+        Ok(response.json::<AciResponse<T>>().await?.imdata)
+    }
+
+    pub async fn get_json(&self, uri: String) -> Result<Vec<Value>> {
+        self.get_json_data::<Value>(uri).await
+    }
+
+    pub async fn get<T>(&self, uri: String) -> Result<Vec<T>>
+    where
+        T: DeserializeOwned,
+    {
+        self.get_json_data::<T>(uri).await
     }
 
     pub async fn post_json(&self, uri: String, data: String) -> Result<()> {
