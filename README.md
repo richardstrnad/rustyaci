@@ -31,7 +31,7 @@ async fn main() {
     };
 
     if let Ok(epgs) = aci.get_json(String::from("class/fvAEPg.json")).await {
-        for epg in epgs.as_array().unwrap() {
+        for epg in epgs {
             println!(
                 "EPG: {:?}",
                 epg["fvAEPg"]["attributes"]["name"].as_str().unwrap()

@@ -320,8 +320,6 @@ mod tests {
         match aci.get_json(String::from("class/fvTenant.json")).await {
             Ok(bds) => {
                 let bd_array = bds
-                    .as_array()
-                    .unwrap()
                     .iter()
                     .map(|bd| bd["fvTenant"]["attributes"]["name"].as_str().unwrap())
                     .collect::<Vec<_>>();
