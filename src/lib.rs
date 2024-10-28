@@ -6,6 +6,8 @@ use serde::{de::DeserializeOwned, Deserialize};
 use serde_json::Value;
 use thiserror::Error;
 
+pub mod macros;
+
 #[derive(Debug, Error)]
 pub enum AciError {
     #[error("Login error")]

@@ -40,3 +40,65 @@ async fn main() {
     }
 }
 ```
+
+The crate provides a Macro `aci_struct` that allows you to generate a Flatted ACI structure. It assumes the following JSON structure.
+```
+"fvTenant": {
+    "attributes": {
+        "name": "TenantName"
+    }
+}
+```
+
+This example would work for the ACI Tenant Object.
+
+```rust
+let json_data = r#"
+{
+    "fvTenant": {
+        "attributes": {
+            "name": "TenantName",
+            "bytes": 500
+        }
+    }
+}"#;
+let tenant: Tenant = serde_json::from_str(json_data).expect("Failed to deserialize");
+```
+
+Many objects have the same Structure for the nested `attributes`. This macro saves some boilerplate. These objects can be used with the `get` function to get the Struct from the ACI API directly.
+```rust
+use dotenvy::dotenv;
+use rustyaci::ACI;
+
+rustyaci::aci_struct!(
+    Tenant,
+    "fvTenant",
+    {
+        name: String,
+        dn: String,
+    }
+);
+
+#[tokio::main]
+async fn main() {
+    dotenv().expect(".env file not found");
+
+    let server = std::env::var("APIC_HOST").unwrap();
+    let username = std::env::var("APIC_USERNAME").unwrap();
+    let password = std::env::var("APIC_PASSWORD").unwrap();
+
+    let aci = match ACI::new(server, username, password).await {
+        Ok(aci) => aci,
+        Err(e) => {
+            println!("Error: {}", e);
+            return;
+        }
+    };
+
+    if let Ok(tenants) = aci.get::<Tenant>(String::from("class/fvTenant.json")).await {
+        for tenant in tenants {
+            println!("Tenant: {:?}", tenant);
+        }
+    }
+}
+```
