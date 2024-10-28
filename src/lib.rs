@@ -364,6 +364,45 @@ mod tests {
         }
     }
 
+    pub struct FlatTenant {
+        pub name: String,
+    }
+
+    impl<'de> Deserialize<'de> for FlatTenant {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            let value: Value = Value::deserialize(deserializer)?;
+            let name = value["fvTenant"]["attributes"]["name"]
+                .as_str()
+                .unwrap()
+                .to_string();
+
+            Ok(FlatTenant { name })
+        }
+    }
+
+    #[tokio::test]
+    async fn aci_get_generic_flat_type() {
+        let aci = login().await;
+
+        match aci
+            .get::<FlatTenant>(String::from("class/fvTenant.json"))
+            .await
+        {
+            Ok(tenants) => {
+                let tenant_names = tenants
+                    .iter()
+                    .map(|tenant| tenant.name.clone())
+                    .collect::<Vec<_>>();
+                assert_eq!(tenant_names, vec!["infra", "common"]);
+                assert_ne!(tenant_names, vec!["infra", "common", "test"])
+            }
+            Err(e) => panic!("{}", e),
+        }
+    }
+
     #[tokio::test]
     async fn aci_post_json() {
         let aci = login().await;
