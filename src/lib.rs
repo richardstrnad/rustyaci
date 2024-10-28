@@ -193,6 +193,7 @@ mod tests {
     use std::{fs, str::FromStr};
 
     use anyhow::anyhow;
+    use serde::Deserialize;
     use serde_json::Value;
 
     use crate::{get_snapshot_data, Executor, ACI};
@@ -318,13 +319,46 @@ mod tests {
         let aci = login().await;
 
         match aci.get_json(String::from("class/fvTenant.json")).await {
-            Ok(bds) => {
-                let bd_array = bds
+            Ok(tenants) => {
+                let tenants = tenants
                     .iter()
-                    .map(|bd| bd["fvTenant"]["attributes"]["name"].as_str().unwrap())
+                    .map(|tenant| tenant["fvTenant"]["attributes"]["name"].as_str().unwrap())
                     .collect::<Vec<_>>();
-                assert_eq!(bd_array, vec!["infra", "common"]);
-                assert_ne!(bd_array, vec!["infra", "common", "test"])
+                assert_eq!(tenants, vec!["infra", "common"]);
+                assert_ne!(tenants, vec!["infra", "common", "test"])
+            }
+            Err(e) => panic!("{}", e),
+        }
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub struct Tenant {
+        #[serde(rename = "fvTenant")]
+        tenant: TenantAttributes,
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub struct TenantAttributes {
+        pub attributes: TenantAttributesInner,
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub struct TenantAttributesInner {
+        pub name: String,
+    }
+
+    #[tokio::test]
+    async fn aci_get_generic() {
+        let aci = login().await;
+
+        match aci.get::<Tenant>(String::from("class/fvTenant.json")).await {
+            Ok(tenants) => {
+                let tenant_names = tenants
+                    .iter()
+                    .map(|tenant| tenant.tenant.attributes.name.clone())
+                    .collect::<Vec<_>>();
+                assert_eq!(tenant_names, vec!["infra", "common"]);
+                assert_ne!(tenant_names, vec!["infra", "common", "test"])
             }
             Err(e) => panic!("{}", e),
         }
