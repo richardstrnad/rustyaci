@@ -60,18 +60,16 @@ macro_rules! aci_struct {
     };
 }
 
-crate::aci_struct!(
-    Tenant,
-    "fvTenant",
-    {
-        name: String,
-        bytes: u64
-    }
-);
-
 #[cfg(test)]
 mod tests {
-    use super::Tenant;
+    crate::aci_struct!(
+        Tenant,
+        "fvTenant",
+        {
+            name: String,
+            bytes: u64
+        }
+    );
 
     #[test]
     fn macro_tenant_test() {
