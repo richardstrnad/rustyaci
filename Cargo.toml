@@ -30,5 +30,5 @@ trait-variant = "0.1.1"
 time = "0.3.36"
 
 # for -Zminimal-versions
-openssl = "0.10.55" # Ubuntu build issue
+openssl = "0.10.68" # Ubuntu build issue
 thiserror = "1.0.63"
